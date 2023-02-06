@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>QQQ prediction with LSTM</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel='stylesheet' type='text/css'>
+  <link rel="preload" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" as="style" onload="this.rel='stylesheet'">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49548145-2"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <script src="./model.js"></script>
+  <script src="./index.js"></script>
+</head>
+
+<body>
+
+  <div id="title">
+    <h1>QQQ prediction with LSTM</h1>
+  </div>
+  <div id="plot">
+    <script>
+      firstplot();
+      grabData();
+    </script>
+  </div> 
+  <div id="train" onclick=train()>
+    <button>training and illustrate</button>
+  </div>
+  <div id="train_log">
+  </div> 
+
+  
+</body>
+</html>
