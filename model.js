@@ -1,4 +1,4 @@
-async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers, callback){
+async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers,outSize, callback){
 
   const batch_size = 32;
 
@@ -14,7 +14,7 @@ async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers, 
 
   // output dense layer
   const output_layer_shape = rnn_output_neurons; // dense layer input size is same as LSTM cell
-  const output_layer_neurons = 1; // return 1 value
+  const output_layer_neurons = outSize; // return 5 value
 
   // ## old method
   // const xs = tf.tensor2d(X, [X.length, X[0].length])//.div(tf.scalar(10));
@@ -22,8 +22,8 @@ async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers, 
 
   // ## new: load data into tensor and normalize data
   const inputTensor = tf.tensor2d(X, [X.length, X[0].length])
-  const labelTensor = tf.tensor2d(Y, [Y.length, 1]).reshape([Y.length, 1])
-
+  const labelTensor = tf.tensor2d(Y, [Y.length, Y[0].length])
+  
   console.log(inputTensor)
 
   const [xs, inputMax, inputMin] = normalizeTensorFit(inputTensor)
@@ -109,19 +109,39 @@ function unNormalizeTensor(tensor, maxval, minval) {
   return unNormTensor;
 }
 
-function fitCallBack(epoch, log) {
-  //let logHtml = document.getElementById("div_traininglog").innerHTML;
-  //logHtml = "<div>Epoch: " + (epoch + 1) + " (of "+ n_epochs +")" +
-    //", loss: " + log.loss +
-    // ", difference: " + (epoch_loss[epoch_loss.length-1] - log.loss) +
-    //"</div>" + logHtml;
+function createInputData(input, window_size, output_size){
+  // use xx day data to predict the next day's closing price
+  // input: matrix including all fields, with first field as closing price
+  let h_all=input.map(function(value,index) { return value[1];});
+  let l_all=input.map(function(value,index) { return value[2];});
+  let n_all=input.map(function(value,index) { return value[3];});
+  let o_all=input.map(function(value,index) { return value[4];});
+  let v_all=input.map(function(value,index) { return value[5];});
+  let vw_all=input.map(function(value,index) { return value[6];});
+  
+  let Yall=input.map(function(value,index) { return value[0];});
 
-  //epoch_loss.push(log.loss);
+  h_in=[];
+  l_in=[];
+  n_in=[];
+  o_in=[];
+  v_in=[];
+  vw_in=[];
 
-  //document.getElementById("div_traininglog").innerHTML = logHtml;
-  //document.getElementById("div_training_progressbar").style.width = Math.ceil(((epoch + 1) * (100 / n_epochs))).toString() + "%";
-  //document.getElementById("div_training_progressbar").innerHTML = Math.ceil(((epoch + 1) * (100 / n_epochs))).toString() + "%";
+  for(let i=0;i<h_all.length-window_size-output_size+1;i++){
+    h_in.push(h_all.slice(i,i+window_size));
+    l_in.push(l_all.slice(i,i+window_size));
+    n_in.push(n_all.slice(i,i+window_size));
+    o_in.push(o_all.slice(i,i+window_size));
+    v_in.push(v_all.slice(i,i+window_size));
+    vw_in.push(vw_all.slice(i,i+window_size));
+  }
 
-  //let graph_plot = document.getElementById('div_linegraph_trainloss');
-  //Plotly.newPlot( graph_plot, [{x: Array.from({length: epoch_loss.length}, (v, k) => k+1), y: epoch_loss, name: "Loss" }], { margin: { t: 0 } } );
-};
+  let Y_in=[];
+  for(let i=window_size;i<h_all.length-output_size+1;i++){
+    Y_in.push(Yall.slice(i,i+output_size));
+  }
+  
+  let sma_in=ComputeSMA(vw_all, window_size);
+  return {h:h_in,l:l_in,n:n_in,o:o_in,v:v_in,vw:vw_in, sma:sma_in, Y:Y_in, X: input};
+}

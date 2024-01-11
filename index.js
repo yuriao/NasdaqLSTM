@@ -3,8 +3,9 @@ let dataAll={0:[],1:[],2:[],3:[]}; // 1m data, 3m data, 1y data
 let dataplot=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [] }]; // 1m data, 3m data, 1y data
 let predictplot=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [] }]; // 1m data, 3m data, 1y data
 let lastPredictScatter=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [] }]; // 1m data, 3m data, 1y data
+let oriDateTime=[]
 let window_size = 20;
-
+let LSTM_outSize=1;
 function firstplot(){
   let urls = stock_urls('QQQ');
   console.log('url generated');
@@ -20,6 +21,12 @@ function firstplot(){
           dataplot[2].x.push(data.results[i].t);
           dataplot[2].y.push(data.results[i].c);
         } 
+
+        oriDateTime=JSON.parse(JSON.stringify(dataplot[2].x));
+        for(let i=0;i<dataplot[2].x.length;i++){
+          dataplot[2].x[i]=formatDate(dataplot[2].x[i]);
+        }
+
         Plotly.newPlot("plot", [dataplot[2]]);  // need to put data into a array
 
         // predict
@@ -42,6 +49,10 @@ function grabData(){
           dataplot[k].x.push(data.results[i].t);
           dataplot[k].y.push(data.results[i].c);
         }
+
+        for(let i=0;i<predictplot[k].x.length;i++){
+          predictplot[k].x[i]=formatDate(predictplot[k].x[i]);
+        }
         
         if(k==3){
           let logHtml = document.getElementById("train_log").innerHTML;
@@ -56,12 +67,12 @@ function train(){
     //let rawDatForTrain=toRaw(this.dataAll[2]); // attn: the async feature let the following functions directly take empty array and go on (https://stackoverflow.com/questions/42260524/array-length-is-zero-but-the-array-has-elements-in-it)
     let rawDatForTrain=dataAll[3];
     console.log(rawDatForTrain);
-    let trainDat=createInputData(rawDatForTrain,20);
+    let trainDat=createInputData(rawDatForTrain,window_size,LSTM_outSize);
     console.log(trainDat.vw)
     let modelPromise=new Promise(function(resolve, reject){ // resolve and reject are builtin functions for Promise, feed them with value and errors
       try {
         
-        let modelDat=trainModel(trainDat.vw, trainDat.Y, window_size, 10, 0.001, 1);
+        let modelDat=trainModel(trainDat.vw, trainDat.Y, window_size, 50, 0.001, 1,LSTM_outSize);
         resolve(modelDat);
       } catch (error) {
         reject(error);
@@ -81,56 +92,37 @@ function train(){
 
 }
 
-function createInputData(input, window_size){
-  // use xx day data to predict the next day's closing price
-  // input: matrix including all fields, with first field as closing price
-  let h_all=input.map(function(value,index) { return value[1];});
-  let l_all=input.map(function(value,index) { return value[2];});
-  let n_all=input.map(function(value,index) { return value[3];});
-  let o_all=input.map(function(value,index) { return value[4];});
-  let v_all=input.map(function(value,index) { return value[5];});
-  let vw_all=input.map(function(value,index) { return value[6];});
-  
-  let Yall=input.map(function(value,index) { return value[0];});
-
-  h_in=[];
-  l_in=[];
-  n_in=[];
-  o_in=[];
-  v_in=[];
-  vw_in=[];
-
-  for(let i=0;i<h_all.length-window_size;i++){
-    h_in.push(h_all.slice(i,i+window_size));
-    l_in.push(l_all.slice(i,i+window_size));
-    n_in.push(n_all.slice(i,i+window_size));
-    o_in.push(o_all.slice(i,i+window_size));
-    v_in.push(v_all.slice(i,i+window_size));
-    vw_in.push(vw_all.slice(i,i+window_size));
-  }
-
-  let Y_in=Yall.slice(window_size,Yall.length);
-  let sma_in=ComputeSMA(vw_all, window_size);
-  return {h:h_in,l:l_in,n:n_in,o:o_in,v:v_in,vw:vw_in, sma:sma_in, Y:Y_in, X: input};
-}
 
 function predictt(model,window_size){
   
   console.log(model);
   let rawDatForTrain3=dataAll[3];
-  let trainDat3=createInputData(rawDatForTrain3,window_size);
-  let predictDat3=makePredictions(trainDat3.vw, model);
+  let trainDat3=createInputData(rawDatForTrain3,window_size,LSTM_outSize);
+  let vw=trainDat3.vw
+  let predictDat3=makePredictions(vw, model);
+  
+  // next 30 days
+  newDateTime=oriDateTime
+  predictDat4=predictDat3;
+  vw.shift();
+  vw.push(predictDat3.slice(-20))
+  for(let k = 0; k < 81; k++){
+    p=makePredictions(vw, model);
+    predictDat4.push(p[p.length-1])
+    vw.shift();
+    vw.push(p.slice(-20))
+    newDateTime.push(newDateTime[newDateTime.length-1]+86400000)
+  }
 
+  console.log(predictDat3.length)
+  console.log(predictDat4.length)
+  
+  for(let i=0;i<newDateTime.length;i++){
+    newDateTime[i]=formatDate(newDateTime[i]-40*86400000);
+  }
   //predictplot[3].x=dataplot[3].x.slice(dataplot[3].x.length-dataplot[2].x.length,dataplot[3].x.length);
-  predictplot[3].x=dataplot[2].x;
-  predictplot[3].y=predictDat3.slice(dataplot[3].x.length-dataplot[2].x.length-window_size,dataplot[3].x.length);
-
-  for(let i=0;i<dataplot[2].x.length;i++){
-    dataplot[2].x[i]=formatDate(dataplot[2].x[i]);
-  }
-  for(let i=0;i<predictplot[3].x.length;i++){
-    predictplot[3].x[i]=formatDate(predictplot[3].x[i]);
-  }
+  predictplot[3].x=newDateTime;
+  predictplot[3].y=predictDat4.slice(predictDat4.length-predictplot[3].x.length-window_size,predictDat4.length);
 
   console.log(predictplot[3].x)
   console.log(predictplot[3].y)
