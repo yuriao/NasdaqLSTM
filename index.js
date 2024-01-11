@@ -72,7 +72,7 @@ function train(){
     let modelPromise=new Promise(function(resolve, reject){ // resolve and reject are builtin functions for Promise, feed them with value and errors
       try {
         
-        let modelDat=trainModel(trainDat.vw, trainDat.Y, window_size, 50, 0.001, 1,LSTM_outSize);
+        let modelDat=trainModel(trainDat.vw, trainDat.Y, window_size, 100, 0.001, 1,LSTM_outSize);
         resolve(modelDat);
       } catch (error) {
         reject(error);
@@ -118,7 +118,7 @@ function predictt(model,window_size){
   console.log(predictDat4.length)
   
   for(let i=0;i<newDateTime.length;i++){
-    newDateTime[i]=formatDate(newDateTime[i]-40*86400000);
+    newDateTime[i]=formatDate(newDateTime[i]-30*86400000);
   }
   //predictplot[3].x=dataplot[3].x.slice(dataplot[3].x.length-dataplot[2].x.length,dataplot[3].x.length);
   predictplot[3].x=newDateTime;
