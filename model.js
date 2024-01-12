@@ -2,35 +2,29 @@ async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers,o
 
   const batch_size = 32;
 
-  // input dense layer
+  // input dense layer params
   const input_layer_shape = window_size;
   const input_layer_neurons = 64;
 
-  // LSTM
+  // LSTM params
   const rnn_input_layer_features = 16;
   const rnn_input_layer_timesteps = input_layer_neurons / rnn_input_layer_features;
   const rnn_input_shape = [rnn_input_layer_features, rnn_input_layer_timesteps]; // the shape have to match input layer's shape
   const rnn_output_neurons = 16; // number of neurons per LSTM's cell
 
-  // output dense layer
+  // output dense layer params
   const output_layer_shape = rnn_output_neurons; // dense layer input size is same as LSTM cell
   const output_layer_neurons = outSize; // return 5 value
 
-  // ## old method
-  // const xs = tf.tensor2d(X, [X.length, X[0].length])//.div(tf.scalar(10));
-  // const ys = tf.tensor2d(Y, [Y.length, 1]).reshape([Y.length, 1])//.div(tf.scalar(10));
 
-  // ## new: load data into tensor and normalize data
+  // load data into tensor and normalize data
   const inputTensor = tf.tensor2d(X, [X.length, X[0].length])
   const labelTensor = tf.tensor2d(Y, [Y.length, Y[0].length])
-  
-  console.log(inputTensor)
 
   const [xs, inputMax, inputMin] = normalizeTensorFit(inputTensor)
   const [ys, labelMax, labelMin] = normalizeTensorFit(labelTensor)
 
   // ## define model
-
   const model = tf.sequential();
 
   model.add(tf.layers.dense({units: input_layer_neurons, inputShape: [input_layer_shape]}));
@@ -56,25 +50,22 @@ async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers,o
 
   // ## fit model
   
-  const hist = await model.fit(xs, ys,{batchSize: batch_size, epochs: n_epochs, callbacks: {
+  const hist = await model.fit(xs, ys,{batchSize: batch_size, epochs: n_epochs+1, callbacks: {
     onEpochEnd: async (epoch, log) => {
       console.log("epoch: "+epoch+" loss: "+log.loss);
       let logHtml = document.getElementById("train_log").innerHTML;
       logHtml = "<div>Epoch: " + (epoch + 1) + " / "+ n_epochs  +", loss: " + log.loss +"</div>" + logHtml;
-      //epoch_loss.push(log.loss);
       document.getElementById("train_log").innerHTML = logHtml;
+      if(epoch + 1==n_epochs){
+        let logHtml = document.getElementById("train_log").innerHTML;
+        logHtml = "<div>training finished, predicting...</div>" + logHtml;
+        document.getElementById("train_log").innerHTML = logHtml;
+      }
     }
   }});
 
-  // return { model: model, stats: hist };
-  //const saveResult = await model.save('localstorage://QQQmodel');
-  //localStorage.setItem('QQQmodel', model);
-  //localStorage.setItem('normalizeFactor', JSON.stringify({inputMax:inputMax, inputMin:inputMin, labelMax:labelMax, labelMin:labelMin, window_size:window_size}));
-  //const loadResult = await tf.loadLayersModel('localstorage://QQQmodel');
-  //console.log(loadResult)
-  //console.log(saveResult)
-  console.log('training fin')
-  console.log(model)
+  console.log('training fin, predicting...')
+  document.getElementById("train_log").innerHTML = '';
   
   return { model: model, stats: hist, normalize: {inputMax:inputMax, inputMin:inputMin, labelMax:labelMax, labelMin:labelMin, window_size:window_size} };
 }
@@ -82,7 +73,6 @@ async function trainModel(X, Y, window_size, n_epochs, learning_rate, n_layers,o
 function makePredictions(X, model)
 {
     // const predictedResults = model.predict(tf.tensor2d(X, [X.length, X[0].length]).div(tf.scalar(10))).mul(10); // old method
-    console.log(X)
     X = tf.tensor2d(X, [X.length, X[0].length]);
     //const normalizedInput = normalizeTensor(X, dict_normalize["inputMax"], dict_normalize["inputMin"]);
     const [normalizedInput, maxx, minn] = normalizeTensorFit(X);
@@ -142,6 +132,6 @@ function createInputData(input, window_size, output_size){
     Y_in.push(Yall.slice(i,i+output_size));
   }
   
-  let sma_in=ComputeSMA(vw_all, window_size);
-  return {h:h_in,l:l_in,n:n_in,o:o_in,v:v_in,vw:vw_in, sma:sma_in, Y:Y_in, X: input};
+  //let sma_in=ComputeSMA(vw_all, window_size);
+  return {h:h_in,l:l_in,n:n_in,o:o_in,v:v_in,vw:vw_in, Y:Y_in, X: input};
 }

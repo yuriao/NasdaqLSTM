@@ -1,6 +1,6 @@
 let timeAll={0:[],1:[],2:[],3:[]}; // 1m data, 3m data, 1y data
 let dataAll={0:[],1:[],2:[],3:[]}; // 1m data, 3m data, 1y data
-let dataplot=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [] }]; // 1m data, 3m data, 1y data
+let dataplot=[{x: [],y: [], name: 'original 1 month' },{x: [],y: [], name: 'original 3 month' },{x: [],y: [], name: 'original 1 year' },{x: [],y: [] }]; // 1m data, 3m data, 1y data
 let predictplot=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [] }]; // 1m data, 3m data, 1y data
 let lastPredictScatter=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [] }]; // 1m data, 3m data, 1y data
 let oriDateTime=[]
@@ -54,25 +54,24 @@ function grabData(){
           predictplot[k].x[i]=formatDate(predictplot[k].x[i]);
         }
         
-        if(k==3){
-          let logHtml = document.getElementById("train_log").innerHTML;
-          logHtml = "data grabbed";
-          document.getElementById("train_log").innerHTML = logHtml;
-        }
       })
   }
 }
 
 function train(){
     //let rawDatForTrain=toRaw(this.dataAll[2]); // attn: the async feature let the following functions directly take empty array and go on (https://stackoverflow.com/questions/42260524/array-length-is-zero-but-the-array-has-elements-in-it)
+    
+
+    // Get the value of the input element and convert it to an integer\
+    var epochInput = document.getElementById('epochInput');
+    let epochNumber = parseInt(epochInput.value, 10);
+
     let rawDatForTrain=dataAll[3];
-    console.log(rawDatForTrain);
     let trainDat=createInputData(rawDatForTrain,window_size,LSTM_outSize);
-    console.log(trainDat.vw)
     let modelPromise=new Promise(function(resolve, reject){ // resolve and reject are builtin functions for Promise, feed them with value and errors
       try {
         
-        let modelDat=trainModel(trainDat.vw, trainDat.Y, window_size, 100, 0.001, 1,LSTM_outSize);
+        let modelDat=trainModel(trainDat.vw, trainDat.Y, window_size, epochNumber, 0.001, 1,LSTM_outSize);
         resolve(modelDat);
       } catch (error) {
         reject(error);
@@ -95,7 +94,6 @@ function train(){
 
 function predictt(model,window_size){
   
-  console.log(model);
   let rawDatForTrain3=dataAll[3];
   let trainDat3=createInputData(rawDatForTrain3,window_size,LSTM_outSize);
   let vw=trainDat3.vw
@@ -114,8 +112,6 @@ function predictt(model,window_size){
     newDateTime.push(newDateTime[newDateTime.length-1]+86400000)
   }
 
-  console.log(predictDat3.length)
-  console.log(predictDat4.length)
   
   for(let i=0;i<newDateTime.length;i++){
     newDateTime[i]=formatDate(newDateTime[i]-30*86400000);
@@ -123,41 +119,14 @@ function predictt(model,window_size){
   //predictplot[3].x=dataplot[3].x.slice(dataplot[3].x.length-dataplot[2].x.length,dataplot[3].x.length);
   predictplot[3].x=newDateTime;
   predictplot[3].y=predictDat4.slice(predictDat4.length-predictplot[3].x.length-window_size,predictDat4.length);
+  predictplot[3].name='predicted'
 
-  console.log(predictplot[3].x)
-  console.log(predictplot[3].y)
   Plotly.newPlot("plot", [dataplot[2],predictplot[3]]);  // overlay original price and predicted price
+  trace0.name = 'Updated First Trace'
+  trace1.name = 'Updated Second Trace'
+
+  fig.data = [trace0, trace1]
   
-  // save today's prediction
-  //let today = new Date();
-  //let dd = String(today.getDate()).padStart(2, '0');
-  //let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-  //let yyyy = today.getFullYear();
-  //today = mm + '/' + dd + '/' + yyyy;
-
-  //let predictionHistory=localStorage.getItem('predictionHistory')
-  //if(predictionHistory==null){
-  //  predictionHistory=[];
-  //  predictionHistory.push([today,predictplot[2].y[predictplot[2].y.length-1]])
-  //  localStorage.setItem('predictionHistory',predictionHistory)
-  //}else{
-  //  predictionHistory.push([today,predictplot[2].y[predictplot[2].y.length-1]])
-  //  localStorage.setItem('predictionHistory',predictionHistory)
-  //}
-}
-
-function ComputeSMA(data, window_size)
-{
-  let r_avgs = [], avg_prev = 0;
-  for (let i = 0; i <= data.length - window_size; i++){
-    let curr_avg = 0.00, t = i + window_size;
-    for (let k = i; k < t && k <= data.length; k++){
-      curr_avg += data / window_size;
-    }
-    r_avgs.push({ set: data.slice(i, i + window_size), avg: curr_avg });
-    avg_prev = curr_avg;
-  }
-  return r_avgs;
 }
 
 function formatDate(time) {
