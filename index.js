@@ -6,6 +6,7 @@ let lastPredictScatter=[{x: [],y: [] },{x: [],y: [] },{x: [],y: [] },{x: [],y: [
 let oriDateTime=[]
 let window_size = 20;
 let LSTM_outSize=1;
+
 function firstplot(){
   let urls = stock_urls('QQQ');
   console.log('url generated');
@@ -60,8 +61,6 @@ function grabData(){
 
 function train(){
     //let rawDatForTrain=toRaw(this.dataAll[2]); // attn: the async feature let the following functions directly take empty array and go on (https://stackoverflow.com/questions/42260524/array-length-is-zero-but-the-array-has-elements-in-it)
-    
-
     // Get the value of the input element and convert it to an integer\
     var epochInput = document.getElementById('epochInput');
     let epochNumber = parseInt(epochInput.value, 10);
@@ -129,6 +128,7 @@ function predictt(model,window_size){
   
 }
 
+
 function formatDate(time) {
   var d = new Date(time),
       month = '' + (d.getMonth() + 1),
@@ -137,14 +137,12 @@ function formatDate(time) {
 
   if (month.length < 2) month = '0' + month;
   if (day.length < 2) day = '0' + day;
-
   return [year, month, day].join('-');
 }
 
+
 function stock_urls(stock){
-
   let timeRanges=timeRangeCalculation()
-
   const url_1m = "https://api.polygon.io/v2/aggs/ticker/"+stock+"/range/1/day/"+timeRanges[0]+"?adjusted=true&sort=asc&apiKey=trh_nPl8ol7yoY_tp2hF2y5uCG4v3rrW";
   const url_3m = "https://api.polygon.io/v2/aggs/ticker/"+stock+"/range/1/day/"+timeRanges[1]+"?adjusted=true&sort=asc&apiKey=trh_nPl8ol7yoY_tp2hF2y5uCG4v3rrW";
   const url_1y = "https://api.polygon.io/v2/aggs/ticker/"+stock+"/range/1/day/"+timeRanges[2]+"?adjusted=true&sort=asc&apiKey=trh_nPl8ol7yoY_tp2hF2y5uCG4v3rrW";
@@ -155,6 +153,7 @@ function stock_urls(stock){
   let res=[url_1m,url_3m,url_1y,url_3y];
   return res;
 }
+
 
 function timeRangeCalculation(){
   // UTC today 
@@ -171,7 +170,6 @@ function timeRangeCalculation(){
   if(adjDay<10){
       adjDay="0"+adjDay;
   }
-
   //1m
   let year1m=year;
   let month1m=month-1;
@@ -184,7 +182,6 @@ function timeRangeCalculation(){
       month1m="0"+month1m;
   }
   let timeRange_1m=year1m+"-"+month1m+"-"+adjDay1m+"/"+year+"-"+adjMonth+"-"+adjDay;
-
   //3m
   let year3m=year;
   let month3m=month-3;
@@ -197,7 +194,6 @@ function timeRangeCalculation(){
       month3m="0"+month3m;
   }
   let timeRange_3m=year3m+"-"+month3m+"-"+adjDay3m+"/"+year+"-"+adjMonth+"-"+adjDay;
-
   //1y
   let year1y=year-1;
   let month1y=month;
@@ -206,7 +202,6 @@ function timeRangeCalculation(){
   }
   let adjDay1y=daysInMonth(adjDay,month1y, year1y);
   let timeRange_1y=year1y+"-"+month1y+"-"+adjDay1y+"/"+year+"-"+adjMonth+"-"+adjDay;
-
   //3y
   let year3y=year-3;
   let month3y=month;
@@ -219,6 +214,7 @@ function timeRangeCalculation(){
   let timeRanges=[timeRange_1m,timeRange_3m,timeRange_1y,timeRange_3y]
   return timeRanges;
 }
+
 
 function daysInMonth(d, m, y) { // https://stackoverflow.com/questions/1433030/validate-number-of-days-in-a-given-month, m: 1-12
   switch (m-1) {
@@ -239,3 +235,5 @@ function daysInMonth(d, m, y) { // https://stackoverflow.com/questions/1433030/v
           return d
   }
 }
+
+

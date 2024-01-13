@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel='stylesheet' type='text/css'>
   <link rel="preload" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" as="style" onload="this.rel='stylesheet'">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link href="index.css" rel="stylesheet">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6850260926649122"crossorigin="anonymous"></script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49548145-2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
@@ -25,26 +27,71 @@
         <h5 class="display-10">Disclaimer: the content of this website is for enterainment propose and is NOT a finanical Advice</h5>
       </div>
     </div>
-
-    <div id="plot" class="mb-1">
-      <script>
-        firstplot();
-        grabData();
-      </script>
-    </div> 
-
-    <div class="text-center mb-3">
-      <label for="epochInput" class="form-label">Training Epochs:</label>
-      <input type="number" class="form-control" id="epochInput" value="100" style="width: auto; margin: 0 auto;">
+    
+    <!-- Rotating panel control-->
+    <div class="text-center">
+      <button id="rotateButton" class="rotate-control btn btn-info">See info</button>
     </div>
 
-    <div id="train" class="text-center">
-      <button class="btn btn-primary" onclick="train()">Training and Illustrate</button>
+    <!-- Rotating panel -->
+    <div id="rotatingPanel" class="rotating-panel">
+      
+      <figure class="predictor-side">
+        <div id="plot" class="mb-1">
+          <script>
+            firstplot();
+            grabData();
+          </script>
+        </div> 
+
+        <div class="text-center mb-3">
+          <label for="epochInput" class="form-label">Training Epochs:</label>
+          <input type="number" class="form-control" id="epochInput" value="100" style="width: auto; margin: 0 auto;">
+        </div>
+
+        <div id="train" class="text-center">
+          <button class="btn btn-primary" onclick="train()">Training and Illustrate</button>
+        </div>
+        <div id="train_log" class="text-center mt-4">
+          <!-- Log content will go here -->
+        </div> 
+      </figure>
+
+      <figure class="introduction-side">
+        <div id="intro" class="mt-10">
+          <h4>About this website</h4>
+          <p> Using deep learning to predict timeseries (like stock prices) has become popular. This website is an simple lightweight frontend app built with HTML, Javascript, REST API, Tensorflos.js and plotly. Stock data is grabbed from polygon.io. LSTM Neural network is built from tensorflow.js, and training and prediction will be done on the your machine. Graph is done with plotly</p>
+          <img src="1.svg" alt="logos">
+        </div>
+      </figure>
+
     </div>
-    <div id="train_log" class="text-center mt-4">
-      <!-- Log content will go here -->
-    </div> 
   </div>
+
+  <div class="social-links">
+    <a href="https://github.com/yuriao" target="_blank" title="GitHub">
+      <i class="fab fa-github"></i>
+    </a>
+    <a href="https://www.linkedin.com/in/lujiachen-158298a1/" target="_blank" title="LinkedIn">
+      <i class="fab fa-linkedin"></i>
+    </a>
+  </div>
+
+  <script>
+      // rotating panel util
+      document.getElementById('rotateButton').addEventListener('click', function() {
+          let panel = document.getElementById('rotatingPanel');
+          panel.classList.toggle('flipped')
+          let btext=document.getElementById('rotateButton').innerText
+          console.log(btext)
+          if(btext=='See info'){
+            document.getElementById("rotateButton").innerText = 'To prediction panel';
+          }else{
+            document.getElementById("rotateButton").innerText = 'See info';
+          }
+
+      });
+  </script>
 
 </body>
 </html>
